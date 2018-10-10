@@ -40,14 +40,14 @@ resource "aws_elasticache_replication_group" "this" {
 
   # automate maintenance
   auto_minor_version_upgrade    = true
-  maintenance_window		= sun:02:00-sun:04:00
+  maintenance_window		= "sun:02:00-sun:04:00"
 
   # availability
   automatic_failover_enabled    = true
   
   # integrity
   snapshot_retention_limit      = 2
-  snapshot_window               = "02:00-03:00"
+  snapshot_window               = "00:00-01:00"
 
   subnet_group_name             = "${aws_elasticache_subnet_group.this.name}"
   tags                          = { Name = "${var.name}-cluster" }
