@@ -22,6 +22,9 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
   -> liveness probe with http://:80?q=whatever (if missing query, returns 400)
 - Task listen on port 80 : should implement an ALB, with SSL termination to improve security
 
+![design schema](sr.png)
+
+
 ### On Redis
 
 - Activate automated failover for HA
