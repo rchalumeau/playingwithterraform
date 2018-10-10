@@ -22,4 +22,10 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
   -> liveness probe with http://:80?q=whatever (if missing query, returns 400)
 - Task listen on port 80 : should implement an ALB, with SSL termination to improve security
 
+### On Redis
 
+- Activate automated failover for HA
+- Add replica in cluster to ensure integrity of redis
+- encryption at rest and in transit for prod readiness
+- Automated upgrade for security patch policy
+- Security group : ingress dedicated to processing CIDRs (ECS in that case)
