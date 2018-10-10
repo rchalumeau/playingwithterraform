@@ -7,6 +7,7 @@ provider "aws" {
 }
 
 provider "random"    { version = "~> 2.0" }
+provider "template"  { version = "~> 1.0" }
 
 ####################
 
@@ -41,10 +42,19 @@ module "redis" {
 
 }
 
+# Generate app definition (to integrate redis url) 
+data "template_file" "app_definition" {
+  template = "${file("app/sreracha.json")}"
+
+  vars {
+     redis_url = "redis://${module.redis.configuration_endpoint_address}:6379"
+  }
+}
+
 # Debug
 output "az" { value = "${local.az}" }
 output "cidrs" { value = "${module.network.private_ids}" }
 output "redis_members" { value = "${module.redis.member_clusters}" }
 output "redis_endpoint" { value = "${module.redis.configuration_endpoint_address}" }
-
+output "rendered" { value = "${data.template_file.app_definition.rendered}" }
 
