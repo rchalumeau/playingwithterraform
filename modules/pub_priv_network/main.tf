@@ -71,7 +71,7 @@ resource "aws_route_table" "public_routetable" {
   }
 
   tags {
-    Name                        = "${var.name}-rt"
+    Name                        = "${var.name}-public-rt"
   }
 
 }
@@ -82,10 +82,12 @@ resource "aws_route_table_association" "public" {
 
   subnet_id      		= "${element(aws_subnet.public.*.id, count.index)}"
   route_table_id 		= "${aws_route_table.public_routetable.id}"
+ 
 }
 
 
 # Allow private subnets to access Internet 
+# FIXME : does redis need such access ? Cloudtrail maybe...
 resource "aws_eip" "gw" {
 
   count      			= "${local.azc}"
@@ -97,23 +99,32 @@ resource "aws_eip" "gw" {
   }
 }
 
+# FIXME : not sure if one gw per subnet or one fr both
 resource "aws_nat_gateway" "gw" {
 
-  count         	= "${local.azc}"
-  subnet_id     	= "${element(aws_subnet.public.*.id, count.index)}"
-  allocation_id 	= "${element(aws_eip.gw.*.id, count.index)}"
+  count         		= "${local.azc}"
+  subnet_id     		= "${element(aws_subnet.public.*.id, count.index)}"
+  allocation_id 		= "${element(aws_eip.gw.*.id, count.index)}"
+
+  tags {
+    Name                        = "${var.name}-natgw-${count.index + 1}"
+  }
 
 }
 
 # Route the non local traffic to internet
 resource "aws_route_table" "private" {
 
-  count  		= "${local.azc}"
-  vpc_id 		= "${aws_vpc.this.id}"
+  count  			= "${local.azc}"
+  vpc_id 			= "${aws_vpc.this.id}"
 
   route {
-    cidr_block 		= "0.0.0.0/0"
-    nat_gateway_id 	= "${element(aws_nat_gateway.gw.*.id, count.index)}"
+    cidr_block 			= "0.0.0.0/0"
+    nat_gateway_id 		= "${element(aws_nat_gateway.gw.*.id, count.index)}"
+  }
+
+  tags {
+    Name                	= "${var.name}-private-rt-${count.index + 1}"
   }
 }
 
