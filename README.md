@@ -15,11 +15,11 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 
 ## Prerequisites : understanding the app
 
-- sreracha tries to connect to redis with envvar REDIS_URL
+- app tries to connect to redis with envvar REDIS_URL
 - dockerfile to be fixed with missing exec permissions
 - image tres to launch app on privileged port as non root user: 
-..- Either change www to root (but that's not a good practice for security)
-..- Change linux config to allow the app to use a prtected port (prefered)
+  - Either change www to root (but that's not a good practice for security)
+  - Change linux config to allow the app to use a prtected port (prefered)
 - App is buggy (wrong fizzbuzz on 15 and 30) and panic after 31 -> stops and need to be restarted to have access to the service : I don't know how to fix that
 - Request need to pass a parameter q, value seems not to be important. If not, response 400. 
 - Once done, request http://:80?q=1 answers 200 and some random 8-ball messages
