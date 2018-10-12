@@ -41,3 +41,16 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - encryption at rest and in transit for prod readiness
 - Automated upgrade for security patch policy
 - Security group : ingress dedicated to processing CIDRs (ECS in that case)
+
+## Why would I use EKS rather than ECS
+
+Pro : 
+- Redis can be mapped to a kubernetes endpoint, which allows to hardcode the redis URL in the sreracha manifests
+- Kubernetes can be installed in a single workstation (minikube)
+- Based on the two previous, the developer can install a single redis pod, atached to the endpoint, and work on his workstation as close as production. The sreracha manifest can then be resused as is in production stage. The endpoint will abstract the address of local redis or elasticache cluster. 
+
+Cons: 
+- Cost
+- Nodes to be managed
+
+

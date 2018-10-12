@@ -1,7 +1,7 @@
 [
   {
     "name": "app",
-    "image": "748938491872.dkr.ecr.eu-west-1.amazonaws.com/sreracha:as_root",
+    "image": "rchalumeau/testsr:latest",
     "memory": 512,
     "essential": true,
     "portMappings": [
@@ -19,8 +19,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-create-group": "true",
-        "awslogs-group": "/ecs/app",
+        "awslogs-group": "${name}",
         "awslogs-region": "${region}",
         "awslogs-stream-prefix": "ecs"
       }

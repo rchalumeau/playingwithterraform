@@ -6,7 +6,8 @@
       "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
-        "logs:PutLogEvents"
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups"
       ],
       "Resource": "*"
     },
@@ -23,6 +24,14 @@
         "ecr:ListImages"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect":"Allow",
+      "Action": [
+        "elasticache:*"
+      ],
+      "Resource": "*"
     }
+    
   ]
 }

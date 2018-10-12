@@ -32,6 +32,7 @@ variable "app_port" {
 
 variable "sg" {
         description = "ID of the security group to use"
+	type = "list"
 }
 
 variable "tg" {
