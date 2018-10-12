@@ -1,60 +1,133 @@
-provider "aws" {
-  region     = "${var.region}"
-  profile    = "terraform"
+# VPC infra
+module "vpc" {
 
-  version = "~> 1.39"
+  source  			= "terraform-aws-modules/vpc/aws"
+  version 			= "1.46.0"
 
-}
+  name 				= "${var.prefix}-vpc"
+  cidr 				= "${var.cidr}"
 
-provider "random"    { version = "~> 2.0" }
-provider "template"  { version = "~> 1.0" }
+  azs             		= [ "${local.az}" ]
+  elasticache_subnets 		= [ "${local.private}" ]
+  public_subnets  		= [ "${local.public}" ]
 
-####################
-
-# Determine the availability zones according to the expected number
-data "aws_availability_zones" "available" {}
-locals {
-	az	= "${slice(data.aws_availability_zones.available.names, 0, var.number_zones)}"
-}
-
-### Create network infra (Pub and private network on x az)
-module "network" {
-  source        = "./modules/pub_priv_network"
-  name		= "${var.prefix}-network"
-
-  cidr		= "${var.cidr}"
-  azs           = "${local.az}"
+  tags				= { Name = "${var.prefix}-vpc" }
 
 }
 
+
+# Set security groups
+# Open public to HTTP
+module "frontend_sg" {
+
+  source                	= "terraform-aws-modules/security-group/aws//modules/http-80"
+
+  name                  	= "${var.prefix}-frontend"
+  description           	= "Security group for web facing"
+  vpc_id                	= "${module.vpc.vpc_id}"
+
+  ingress_cidr_blocks   	= [ "${local.public}" ]
+}
+
+# Open to redis
+module "redis_sg" {
+
+  source                	= "terraform-aws-modules/security-group/aws//modules/redis"
+
+  name                  	= "${var.prefix}-frontend"
+  description           	= "Security group for web facing"
+  vpc_id                	= "${module.vpc.vpc_id}"
+
+  ingress_cidr_blocks   	= [ "${local.private}" ]
+
+}
+
+
+# Provision Redis cluster
 # Create redis infra
 module "redis" {
 
-  source        = "./modules/redis"
-  name          = "${var.prefix}-redis"
+  source        		= "./modules/redis"
+  name          		= "${var.prefix}-redis"
 
   # On which subnets should it be installed
-  vpc_id       	= "${module.network.vpc_id}"
-  subnet_ids    = "${module.network.private_ids}"
+  vpc_id       			= "${module.vpc.vpc_id}"
+  subnet_name   		= "${module.vpc.elasticache_subnet_group_name}"
   
-  node_type	= "cache.t2.micro"
-  replica_count	= 1 # One read replica per cluster
+  node_type			= "cache.t2.micro"
+  replica_count			= 1 # One read replica per cluster
+  group_count			= "${var.number_zones}"
 
+  sg				= "${module.redis_sg.this_security_group_id}"
 }
 
-# Generate app definition (to integrate redis url) 
-data "template_file" "app_definition" {
-  template = "${file("app/sreracha.json")}"
+
+# Generate app definition
+data "template_file" "app" {
+  template 			= "${file("ecs_definition/sreracha.json")}"
 
   vars {
-     redis_url = "redis://${module.redis.configuration_endpoint_address}:6379"
+     redis_url 			= "redis://${module.redis.configuration_endpoint_address}:6379"
+     name			= "${var.prefix}"
+     region			= "${var.region}"
   }
 }
 
-# Debug
-output "az" { value = "${local.az}" }
-output "cidrs" { value = "${module.network.private_ids}" }
-output "redis_members" { value = "${module.redis.member_clusters}" }
-output "redis_endpoint" { value = "${module.redis.configuration_endpoint_address}" }
-output "rendered" { value = "${data.template_file.app_definition.rendered}" }
+# Logs
+/*resource "aws_s3_bucket" "log_bucket" {
+  bucket        		= "${local.bucket}"
+  policy        		= "${data.aws_iam_policy_document.bucket_policy.json}"
+}*/
 
+# Provision ALB
+module "alb" {
+
+  source                        = "terraform-aws-modules/alb/aws"
+  load_balancer_name            = "${var.prefix}-alb"
+  security_groups               = [ "${module.frontend_sg.this_security_group_id}" ]
+
+  logging_enabled		= false
+  #log_bucket_name               = "${local.bucket}"
+  #log_location_prefix           = "access"
+
+  subnets                       = [ "${module.vpc.public_subnets}" ]
+  tags                          = { Name = "${var.prefix}-alb" }
+
+  vpc_id                        = "${module.vpc.vpc_id}"
+
+  http_tcp_listeners            = "${list(map("port", "80", "protocol", "HTTP"))}"
+  http_tcp_listeners_count      = "1"
+
+  target_groups                 = "${local.target_groups}"
+  target_groups_count           = "1"
+}
+
+
+
+# Provision ECS cluster
+module "ecs" {
+  
+  source 			= "./modules/ecs"
+  name 				= "${var.prefix}-ecs"
+  
+  vpc_id			= "${module.vpc.vpc_id}"
+  subnet_ids			= [ "${module.vpc.public_subnets}" ]
+
+  fargate_cpu			= 256
+  fargate_memory 		= 1024
+
+  definition			= "${data.template_file.app.rendered}"
+  app_port			= 80
+  app_count			= 2
+  app_family			= "app"
+  sg				= "${module.frontend_sg.this_security_group_id}"
+  tg				= "${element(module.alb.target_group_arns, 0)}"
+}
+
+### DEBUG ###
+output "az" { value = "${local.az}" }
+output "publiccidrs" { value = "${local.public}" }
+output "private cidrs" { value = "${local.private}" }
+output "elastocache subnets" { value = "${module.vpc.elasticache_subnet_group_name}" }
+output "vpc_id" { value = "${module.vpc.vpc_id}" }
+output "def" { value = "${data.template_file.app.rendered}" }

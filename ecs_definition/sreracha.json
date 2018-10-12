@@ -1,0 +1,33 @@
+[
+  {
+    "name": "app",
+    "image": "748938491872.dkr.ecr.eu-west-1.amazonaws.com/sreracha:as_root",
+    "memory": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "environment": [
+      { 
+	"name": "REDIS_URL",
+	"value": "${redis_url}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-create-group": "true",
+        "awslogs-group": "/ecs/app",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    },
+    "healthCheck": {
+        "command": [ "CMD-SHELL", "curl -f http://localhost:80?q=1 || exit 1" ],
+        "startPeriod": 10
+    }
+  }
+]
