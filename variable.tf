@@ -14,3 +14,13 @@ variable "cidr" {
 	description = "CIDR of the virtual network"
 }
 
+###
+
+variable "domain" {
+ 	description = "route53 zone to be used"
+}
+
+variable "subdomain" {
+	description = "Subdomain to be crested poijting at the ECS containers" 
+}
+

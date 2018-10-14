@@ -111,6 +111,9 @@ module "alb" {
   http_tcp_listeners            = "${list(map("port", "80", "protocol", "HTTP"))}"
   http_tcp_listeners_count      = "1"
 
+  https_listeners               = "${list(map("certificate_arn", "${aws_acm_certificate_validation.cert.certificate_arn}", "port", 443))}"
+  https_listeners_count         = "1"
+
   target_groups                 = "${local.target_groups}"
   target_groups_count           = "1"
 }
@@ -137,11 +140,13 @@ module "ecs" {
   tg				= "${element(module.alb.target_group_arns, 0)}"
 }
 
+
 ### DEBUG ###
-output "az" { value = "${local.az}" }
-output "publiccidrs" { value = "${local.public}" }
-output "private cidrs" { value = "${local.private}" }
-output "elastocache subnets" { value = "${module.vpc.elasticache_subnet_group_name}" }
-output "vpc_id" { value = "${module.vpc.vpc_id}" }
+#output "az" { value = "${local.az}" }
+#output "publiccidrs" { value = "${local.public}" }
+#output "private cidrs" { value = "${local.private}" }
+#output "elastocache subnets" { value = "${module.vpc.elasticache_subnet_group_name}" }
+#output "vpc_id" { value = "${module.vpc.vpc_id}" }
 output "def" { value = "${data.template_file.app.rendered}" }
-output "dns" { value = "${module.alb.dns_name}" }
+#output "dns" { value = "${module.alb.dns_name}" }
+output "test_url" { value = "https://${aws_route53_record.www.fqdn}/?q=1" }
