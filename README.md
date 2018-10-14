@@ -77,12 +77,18 @@ Sorry for the 503, couldn't get the sreracha app more stable than some outage ph
   - data.tf conatins the locals and some interpolated values
   - providers contans the versions of the called providers (aws, template and random) 
 
+The HCL takes 6 variables : 
+- AWS region
+- prefix, to be added to all provisioned assets names
+- cidr of the VPC
+- Number of availabilty zones : this number will determine the avauilabulity zones and the subnets CIDR (one per zone)
+- domain and subdomain to set DNS and ssl certificate
 
 ## Improvements to be done
 
 ### On the app serracha 
 - For sure, this is to be stabilized 
-- The app needs to be able to to authent to a secure Redis. Maybe is there an env var such as REDIS_AUTH or REDIS_TOKEN
+- The app needs to be able to to authent to a secure Redis. SO far, it can't, so no encrption in transit. Maybe is there an env var such as REDIS_AUTH or REDIS_TOKEN
 - Clearly, needs a --help argument to ease the work of SRE
 
 ### On the provided HCL 
@@ -112,7 +118,7 @@ The state file shall be remotely stored in a centralised repository like s3 (I h
 
 ### Improvement
 
-The point to be improved is that the infra has to be provisionned first to be able to send the redis url back to the developper. I would have proposed another infra that would allow the dev to initiate the changes and deliver to the sre an immutable manifest that can be loaded in an production ready infrastructure, ie with kube.  
+The point to be improved is that the infra has to be provisionned first to be able to send the redis url back to the developper. I would have proposed another infra that would allow the dev to initiate the changes and deliver to the sre an immutable manifest that can be loaded in an production ready infrastructure, based on kube.  
 
 ### With EKS
 
