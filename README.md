@@ -24,17 +24,19 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - Request need to pass a parameter q, value seems not to be important. If not, response 400. 
 - Once done, request http://:80?q=1 answers 200 and some random 8-ball messages
 
-## Design notes
+Dockerfile fixed in (dcker/Dockerfile) 
+
+# Design notes
 
 - Container running in ECS (Fargate) using Redis from elasticache
 - For confidentiality purpose, two subnet levels : one public (hosting ECS), one private (hosting Redis)
 - For availability, clustering ECS and Redis on two AZ
-- Docker :  need a way to restart the task on ECS with liveness probe as http://:80?q=whatever
-- Task listen on port 80 : should implement an ALB, with SSL termination to improve security
+- Docker : need a way to restart the task on ECS with liveness probe as http://:80?q=whatever
+- ALB with SSL termination to improve frontend security
 
 ![design schema](img/sr.png)
 
-### On Redis
+## On Redis
 
 - Activate automated failover for HA
 - Add replica in cluster to ensure integrity of redis
@@ -59,8 +61,20 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 
 ![result](img/Capture.PNG)
 
-Go to https://sreracha.polarislas.ch/q=1
+Go to https://sreracha.polarislabs.ch/q=1
 Sorry for the 503, couldn't get the sreracha app more stable than some outage phases. 
+
+## HCL files : 
+- 3 standard modules have been used from terraform registry : vpc, security groups and alb
+- 2 modules have been implemented : 
+  - fargate ecs with service (description file as input of the module)
+  - elasticache redis in cluster mode
+- At the root of the folder : 
+  - main.tf cntains the calls to modules
+  - ssl.tf contains the ops on the dns and certificate
+  - data.tf conatins the locals and some interpolated values
+  - providers contans the versions of the called providers (aws, template and random) 
+
 
 # Improvements to be done
 
