@@ -20,7 +20,7 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - image tres to launch app on privileged port as non root user: 
   - Either change www to root (but that's not a good practice for security)
   - Change linux config to allow the app to use a prtected port (prefered)
-- App is buggy (wrong fizzbuzz on 15 and 30) and panic after 31 -> stops and need to be restarted to have access to the service : I don't know how to fix that
+- App is buggy (wrong fizzbuzz on 15 and 30) and panic after 31, ie around 30 secnds -> stops and need to be restarted to have access to the service : I don't know how to fix that
 - Request need to pass a parameter q, value seems not to be important. If not, response 400. 
 - Once done, request http://:80?q=1 answers 200 and some random 8-ball messages
 
@@ -60,6 +60,7 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 ![result](img/Capture.PNG)
 
 Go to https://sreracha.polarislas.ch/q=1
+Sorry for the 503, couldn't get the sreracha app more stable than some outage phases. 
 
 # Improvements to be done
 
@@ -72,7 +73,8 @@ Go to https://sreracha.polarislas.ch/q=1
 - ssue with the current redis cluster, got error "you can't write against a read only slave" : maybe due to my lack f expertise on elasticache, I guess that the endpoint URL is to be fixed. 
 - Fine tuning of the security groups needs to be done. 
 - Send logs to cloudwatch : access logs from ALB, access to Redis, etc... 
-- Redirect the http to https. 80 is still open in this HCL. 
+- Redirect from http to https. 80 is still open in this HCL. 
+- The two containers start at the same time, therefore they stop at the same time. The duration of ECS healthcheck, the time t provision, makes a 503 error until the tasks are running and the ALB is healthy. The two containers should be started at differnt times (know how to do in kubernetes, don't know woth ECS)
 
 # CI/CD
 
