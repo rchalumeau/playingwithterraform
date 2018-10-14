@@ -32,7 +32,7 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - Docker :  need a way to restart the task on ECS with liveness probe as http://:80?q=whatever
 - Task listen on port 80 : should implement an ALB, with SSL termination to improve security
 
-![design schema](sr.png)
+![design schema](img/sr.png)
 
 ### On Redis
 
@@ -52,7 +52,7 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 
 And here we are : 
 
-![result](Capture.png)
+![result](img/Capture.PNG)
 
 # Improvements to be done
 
@@ -96,7 +96,7 @@ I see in this architecture two main benefits :
 - Kubernetes can be installed in a single workstation with minikube : it allows the developper to code in his own machine as close as the targeted environment. He can therefore test the deployment manifest before committing (and so launching the pipeline). 
 - Based on the two previous, the developer can install a single redis pod, atached to the endpoint, and work on his workstation as close as production. The sreracha manifest can then be resused as is in production stage. The endpoint will abstract the address of local redis or elasticache cluster. The pipeline will then do a `kubectl create` on the prod like infrastructure. 
 
-![kubernetes workflow](kubernetes.png)
+![kubernetes workflow](img/kubernetes.png)
 
 # About performance tests
 
