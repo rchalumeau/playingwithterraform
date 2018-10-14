@@ -24,7 +24,7 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - Request need to pass a parameter q, value seems not to be important. If not, response 400. 
 - Once done, request http://:80?q=1 answers 200 and some random 8-ball messages
 
-Dockerfile fixed in (dcker/Dockerfile) 
+Dockerfile fixed [here](docker/Dockerfile) 
 
 # Design notes
 
@@ -61,7 +61,7 @@ Dockerfile fixed in (dcker/Dockerfile)
 
 ![result](img/Capture.PNG)
 
-Go to https://sreracha.polarislabs.ch/q=1
+Go to https://sreracha.polarislabs.ch/?q=1
 Sorry for the 503, couldn't get the sreracha app more stable than some outage phases. 
 
 ## HCL files : 
