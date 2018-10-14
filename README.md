@@ -50,9 +50,16 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - Container fails after 30 seconds : need to restart with healthcheck
 
 
-And here we are : 
+## On ALB
+- Generate SSL and attach to ALB
+- SSL termination : only accet 443 and redirect 80 -> 443
+- Same checks as containers (or healthceck on status 400, but not very clean) 
+
+# And finally  
 
 ![result](img/Capture.PNG)
+
+Go to https://sreracha.polarislas.ch/q=1
 
 # Improvements to be done
 
@@ -65,7 +72,7 @@ And here we are :
 - ssue with the current redis cluster, got error "you can't write against a read only slave" : maybe due to my lack f expertise on elasticache, I guess that the endpoint URL is to be fixed. 
 - Fine tuning of the security groups needs to be done. 
 - Send logs to cloudwatch : access logs from ALB, access to Redis, etc... 
-
+- Redirect the http to https. 80 is still open in this HCL. 
 
 # CI/CD
 
