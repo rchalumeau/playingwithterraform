@@ -26,7 +26,7 @@ module "http_sg" {
   description           	= "Security group for web facing"
   vpc_id                	= "${module.vpc.vpc_id}"
 
-  ingress_cidr_blocks   	= [ "${local.public}" ]
+  ingress_cidr_blocks   	= [ "0.0.0.0/0" ]
 }
 
 module "https_sg" {
@@ -37,7 +37,7 @@ module "https_sg" {
   description                   = "Security group for web facing"
   vpc_id                        = "${module.vpc.vpc_id}"
 
-  ingress_cidr_blocks           = [ "${local.public}" ]
+  ingress_cidr_blocks           = [ "0.0.0.0/0" ]
 }
 
 
@@ -50,7 +50,7 @@ module "redis_sg" {
   description           	= "Security group for redis"
   vpc_id                	= "${module.vpc.vpc_id}"
 
-  ingress_cidr_blocks   	= [ "${local.private}" ]
+  ingress_cidr_blocks   	= [ "${local.public}" ]
 
 }
 
