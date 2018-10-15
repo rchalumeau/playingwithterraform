@@ -13,8 +13,6 @@ aws_access_key_id=ACCESSKEY
 aws_secret_access_key=SECRETKEY
 ```
 
-Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html)
-
 ### Understanding the app 
 
 - app tries to connect to redis with envvar REDIS_URL
@@ -22,8 +20,8 @@ Refer to [AWS configuration guide for more details](https://docs.aws.amazon.com/
 - image tres to launch app on privileged port as non root user: 
   - Either change www to root (but that's not a good practice for security)
   - Change linux config to allow the app to use a prtected port (prefered)
-- App is buggy (wrong fizzbuzz on 15 and 30) and panic after 31, ie around 30 secnds -> stops and need to be restarted to have access to the service : I don't know how to fix that
-- Request need to pass a parameter q, value seems not to be important. If not, response 400. 
+- App is buggy (wrong fizzbuzz on 15 and 30) and panics after 31, ie around 30 secnds -> stops and need to be restarted to have access to the service : I don't know how to fix that
+- Mandatory parameter q in the request, value seems not to be important. If not, response 400. 
 - Once done, request http://:80?q=1 answers 200 and some random 8-ball messages
 
 Dockerfile fixed [here](docker/Dockerfile) 
@@ -55,8 +53,8 @@ Dockerfile fixed [here](docker/Dockerfile)
 
 ### On ALB 
 
-- Generate SSL and attach to ALB
-- SSL termination : only accet 443 and redirect 80 -> 443
+- Generate SSL and attach to ALB (need cert validation through route53 CNAME)
+- SSL termination : only access to https and redirect 80 -> 443
 - Same checks as containers (or healthceck on status 400, but not very clean) 
 
 ## And finally 
@@ -67,22 +65,24 @@ Go to https://sreracha.polarislabs.ch/?q=1
 Sorry for the 503, couldn't get the sreracha app more stable than some outage phases. 
 
 ### HCL files
-- 3 standard modules have been used from terraform registry : vpc, security groups and alb
-- 2 modules have been implemented : 
-  - fargate ecs with service (description file as input of the module)
-  - elasticache redis in cluster mode
+- 3 official modules have been used from terraform registry : vpc, security groups and alb
+- 2 custom modules have been implemented : 
+  - [fargate ecs with service](modules/ecs) (description file as input of the module)
+  - [elasticache redis in cluster mode](modules/redis)
 - At the root of the folder : 
-  - main.tf cntains the calls to modules
-  - ssl.tf contains the ops on the dns and certificate
-  - data.tf conatins the locals and some interpolated values
-  - providers contans the versions of the called providers (aws, template and random) 
+  - [main.tf](main.tf) contains the calls to modules
+  - [ssl.tf](ssl.tf) contains the ops on the dns and certificate
+  - [data.tf](data.tf) contains the locals and some interpolated values
+  - [providers.tf](providers.tf) contans the versions of the called providers (aws, template and random) 
 
 The HCL takes 6 variables : 
 - AWS region
 - prefix, to be added to all provisioned assets names
 - cidr of the VPC
-- Number of availabilty zones : this number will determine the avauilabulity zones and the subnets CIDR (one per zone)
-- domain and subdomain to set DNS and ssl certificate
+- Number of availabilty zones : this number will automatically determine 
+  - the n first availability zones in the region
+  - the subnets CIDR (one public and one private per az) check [data.tf file](data.tf)
+- domain and subdomain to set DNS and ssl certificate (used in [ssl.tf](ssl.tf))
 
 ## Improvements to be done
 
@@ -92,10 +92,9 @@ The HCL takes 6 variables :
 - Clearly, needs a --help argument to ease the work of SRE
 
 ### On the provided HCL 
-- ssue with the current redis cluster, got error "you can't write against a read only slave" : maybe due to my lack f expertise on elasticache, I guess that the endpoint URL is to be fixed. 
-- Fine tuning of the security groups needs to be done. 
+- Issue with the current redis cluster, got error "you can't write against a read only slave" : maybe due to my lack f expertise on elasticache, I guess that the endpoint URL is to be fixed. For the mpment, it is running on a simple elasticache redis cluster instead of a replication group)
 - Send logs to cloudwatch : access logs from ALB, access to Redis, etc... 
-- Redirect from http to https. 80 is still open in this HCL. 
+- Force redirect from http to https. 80 is still open in this HCL. 
 - The two containers start at the same time, therefore they stop at the same time. The duration of ECS healthcheck, the time t provision, makes a 503 error until the tasks are running and the ALB is healthy. The two containers should be started at differnt times (know how to do in kubernetes, don't know woth ECS)
 
 ## CI/CD
@@ -109,12 +108,14 @@ As the infra and the app are initiated by two different persons, I would split t
 After creating the infra with terraform, send the information (or the generated manifest) to the junior engineer. Then, create a codepipeline with : 
 - codebuild to compile the go app, unit test it, and finally build and push the docker image. 
 - codedeploy to deploy in the already provisionned infra, from the previous description json file. 
-- I will then trigger some smoke tests like curl actions to have an oversll view of the app
+- I will then trigger some smoke tests like curl actions to have an overall view of the app 
 
 #### Infra
 
 The same HCL code can be stored in codecommit, and trigger on changes codebuild pipeline to run `terraform validate` step, and `terraform apply` then. 
 The state file shall be remotely stored in a centralised repository like s3 (I have personally used artifactory to store the remote states). 
+
+![CI/CD workflow with codepipeline and ECS](img/ci_workflow.png)
 
 ### Improvement
 
