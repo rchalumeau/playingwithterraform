@@ -8,8 +8,8 @@ module "vpc" {
   cidr 				= "${var.cidr}"
 
   azs             		= [ "${local.az}" ]
-  elasticache_subnets 		= [ "${local.private}" ]
-  public_subnets  		= [ "${local.public}" ]
+  elasticache_subnets 		    = [ "${local.private}" ]
+  public_subnets  		        = [ "${local.public}" ]
 
   tags				= { Name = "${var.prefix}-vpc" }
 
@@ -59,8 +59,8 @@ module "redis_sg" {
 # Create redis infra
 module "redis" {
 
-  source        		= "./modules/redis"
-  name          		= "${var.prefix}-redis"
+  source        		      = "./modules/redis"
+  name          		      = "${var.prefix}-redis"
 
   # On which subnets should it be installed
   vpc_id       			= "${module.vpc.vpc_id}"
